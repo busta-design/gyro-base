@@ -2,6 +2,7 @@
 
 import { PrivyProvider } from "@privy-io/react-auth";
 import { baseSepolia } from "viem/chains";
+import { SmartWalletsProvider } from "@privy-io/react-auth/smart-wallets";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +20,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         supportedChains: [baseSepolia],
       }}
     >
-      {children}
+      <SmartWalletsProvider>{children}</SmartWalletsProvider>
     </PrivyProvider>
   );
 }
