@@ -1,15 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
-import { createPublicClient, formatUnits, http } from "viem";
-import { baseSepolia } from "viem/chains";
 import { USDC_ABI } from "@/lib/constants/abi/usdcAbi";
 import { SEPOLIA_BASE_USDC } from "@/lib/constants/contractAddresses";
-import { QRCodeSVG } from "qrcode.react";
-import Image from "next/image";
+import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 import { toPng } from "html-to-image";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPublicClient, http } from "viem";
+import { baseSepolia } from "viem/chains";
 
 export default function DepositQrPage() {
   const router = useRouter();
@@ -28,30 +28,31 @@ export default function DepositQrPage() {
   );
 
   const initialAmount = search?.get("amount") ?? "";
-  const [amountBob, setAmountBob] = useState<string>(initialAmount);
+  const amountBob = initialAmount;
   const expiryDays = search?.get("expiryDays") ?? "1";
   const usdAmountParam = search?.get("usdAmount") ?? "";
   const [txHash, setTxHash] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [usdcBalance, setUsdcBalance] = useState<string | null>(null);
-  const [loadingBal, setLoadingBal] = useState(false);
+  // const [error, setError] = useState<string | null>(null);
+  // const [usdcBalance, setUsdcBalance] = useState<string | null>(null);
+  // const [loadingBal, setLoadingBal] = useState(false);
 
   const loadUsdcBalance = useCallback(async () => {
     if (!address) return;
-    setLoadingBal(true);
+    // setLoadingBal(true);
     try {
-      const result = (await publicClient.readContract({
+      // const result = (await publicClient.readContract({
+      (await publicClient.readContract({
         address: SEPOLIA_BASE_USDC,
         abi: USDC_ABI,
         functionName: "balanceOf",
         args: [address],
       })) as bigint;
-      setUsdcBalance(formatUnits(result, 6));
+      // setUsdcBalance(formatUnits(result, 6));
     } catch (e) {
       console.error("Error reading USDC balance:", e);
     } finally {
-      setLoadingBal(false);
+      // setLoadingBal(false);
     }
   }, [address, publicClient]);
 
@@ -62,7 +63,7 @@ export default function DepositQrPage() {
   const sendMockDeposit = async () => {
     if (!address) return;
     setSending(true);
-    setError(null);
+    // setError(null);
     setTxHash(null);
     try {
       const resp = await fetch("/api/mock/bank-deposit", {
@@ -79,7 +80,8 @@ export default function DepositQrPage() {
       }
       setTxHash(data?.data?.transactionHash ?? null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      console.log(e);
+      // setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSending(false);
     }
@@ -100,10 +102,18 @@ export default function DepositQrPage() {
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], "GYRO-QR-Deposito.png", { type: "image/png" });
+      const file = new File([blob], "GYRO-QR-Deposito.png", {
+        type: "image/png",
+      });
 
-      if ((navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
-        await (navigator as any).share({ files: [file], title: "Código QR GYRO - Depósito" });
+      if (
+        (navigator as any).canShare &&
+        (navigator as any).canShare({ files: [file] })
+      ) {
+        await (navigator as any).share({
+          files: [file],
+          title: "Código QR GYRO - Depósito",
+        });
       } else {
         const link = document.createElement("a");
         link.href = dataUrl;
@@ -120,12 +130,21 @@ export default function DepositQrPage() {
   return (
     <main className="min-h-dvh bg-[#F3F4F6] text-[#111827] flex flex-col">
       <header className="flex items-center justify-between px-4 pt-4 mb-4">
-        <button onClick={() => router.push("/dashboard")} className="px-3 py-2 rounded-lg bg-white shadow-sm">←</button>
-        
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="px-3 py-2 rounded-lg bg-white shadow-sm"
+        >
+          ←
+        </button>
       </header>
       <section className="px-4 pb-8">
-        <h1 className="text-[24px] md:text-[28px] font-bold mb-2">Depositar en Bolivianos (QR)</h1>
-        <p className="text-[#6B7280] mb-6">Escanea este QR para transferir. Monto {canSimulate ? "fijado" : "libre"}.</p>
+        <h1 className="text-[24px] md:text-[28px] font-bold mb-2">
+          Depositar en Bolivianos (QR)
+        </h1>
+        <p className="text-[#6B7280] mb-6">
+          Escanea este QR para transferir. Monto{" "}
+          {canSimulate ? "fijado" : "libre"}.
+        </p>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
           <div className="text-[14px] text-[#6B7280] mb-2">Tu dirección</div>
@@ -155,10 +174,25 @@ export default function DepositQrPage() {
                 includeMargin={false}
               />
               <div className="w-full text-left text-sm">
-                <div>Destino: <span className="font-mono">{address ? address.slice(0, 8) + "..." + address.slice(-6) : "--"}</span></div>
-                <div>Monto (BOB): <span className="font-semibold">{amountBob || "Monto libre"}</span></div>
+                <div>
+                  Destino:{" "}
+                  <span className="font-mono">
+                    {address
+                      ? address.slice(0, 8) + "..." + address.slice(-6)
+                      : "--"}
+                  </span>
+                </div>
+                <div>
+                  Monto (BOB):{" "}
+                  <span className="font-semibold">
+                    {amountBob || "Monto libre"}
+                  </span>
+                </div>
                 {usdAmountParam && (
-                  <div>Equivalente: <span className="font-semibold">{usdAmountParam} USDC</span></div>
+                  <div>
+                    Equivalente:{" "}
+                    <span className="font-semibold">{usdAmountParam} USDC</span>
+                  </div>
                 )}
               </div>
               <div className="w-full mt-3 pt-3 border-t border-[#E5E7EB] text-center text-xs text-[#6B7280]">
@@ -180,7 +214,9 @@ export default function DepositQrPage() {
             <button
               onClick={() =>
                 router.push(
-                  `/fund?currentAmount=${encodeURIComponent(amountBob || "")}&currentExpiry=${encodeURIComponent(expiryDays)}`
+                  `/fund?currentAmount=${encodeURIComponent(
+                    amountBob || ""
+                  )}&currentExpiry=${encodeURIComponent(expiryDays)}`
                 )
               }
               className="px-4 py-2 rounded-lg bg-white border border-[#E5E7EB]"
@@ -198,7 +234,14 @@ export default function DepositQrPage() {
             <div className="mt-3 text-sm">
               Transacción enviada: <span className="font-mono">{txHash}</span>
               {explorerUrl && (
-                <a className="ml-2 text-[#009DA1] underline" href={explorerUrl} target="_blank" rel="noreferrer">Ver en BaseScan</a>
+                <a
+                  className="ml-2 text-[#009DA1] underline"
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Ver en BaseScan
+                </a>
               )}
             </div>
           )}
