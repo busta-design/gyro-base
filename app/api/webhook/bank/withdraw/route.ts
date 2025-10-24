@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAddress } from "viem";
 import { z } from "zod";
 import { convertUsdcToBob, getWithdrawalExchangeRate } from "@/lib/services/currencyConverter";
+import { saveTransaction } from "@/lib/services/transactionStorage";
 
 /**
  * Validation schemas using Zod
@@ -51,6 +52,7 @@ type WithdrawRequest = z.infer<typeof WithdrawRequestSchema>;
 interface WithdrawResponse {
   success: boolean;
   data?: {
+    transactionId: string;
     withdrawalId: string;
     amountUsdc: string;
     amountBob: string;
@@ -130,6 +132,23 @@ export async function POST(
 
     // Generate withdrawal ID
     const withdrawalId = `WD${Date.now().toString().slice(-8)}`;
+    const transactionId = `TX${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const timestamp = new Date().toISOString();
+
+    // Save transaction to in-memory storage
+    saveTransaction({
+      transactionId,
+      withdrawalId,
+      amountUsdc,
+      amountBob: amountBob.toFixed(2),
+      exchangeRate: exchangeRate.rate,
+      senderAddress,
+      recipientBankAccount,
+      recipientName,
+      status: "processing",
+      timestamp,
+      txHash,
+    });
 
     // In production, here you would:
     // 1. Verify the USDC transaction on-chain (using txHash)
@@ -138,13 +157,14 @@ export async function POST(
     // 4. Send confirmation to user
 
     console.log(
-      `[WITHDRAW WEBHOOK] Withdrawal ${withdrawalId} created successfully`
+      `[WITHDRAW WEBHOOK] Withdrawal ${withdrawalId} created successfully (Transaction ID: ${transactionId})`
     );
 
     return NextResponse.json(
       {
         success: true,
         data: {
+          transactionId,
           withdrawalId,
           amountUsdc,
           amountBob: amountBob.toFixed(2),
@@ -153,7 +173,7 @@ export async function POST(
           recipientName,
           senderAddress,
           status: "processing",
-          timestamp: new Date().toISOString(),
+          timestamp,
         },
         statusCode: 200,
       },
