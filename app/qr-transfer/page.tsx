@@ -3,17 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
-import { createPublicClient, formatUnits, http } from "viem";
+import { createPublicClient, encodeFunctionData, formatUnits, http, parseUnits } from "viem";
 import { baseSepolia } from "viem/chains";
 import { USDC_ABI } from "@/lib/constants/abi/usdcAbi";
 import { SEPOLIA_BASE_USDC } from "@/lib/constants/contractAddresses";
 
+const recipientAddress = process.env.NEXT_PUBLIC_QR_RECIPIENT_ADDRESS as `0x${string}` | undefined;
+
 export default function QRTransferPage() {
-  // Datos simulados del QR escaneado
   const qrData = {
     recipientName: "María López",
-    recipientAddress: "GCEXAMPLE1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ123456",
-    recipientMemo: "987654",
+    bankAccount: "GCEXAMPLE1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ123456",
+    memo: "987654",
   };
 
   const router = useRouter();
@@ -144,19 +145,36 @@ export default function QRTransferPage() {
 
     setLoading(true);
     try {
-      if (!client) {
+      if (!client || !client.account?.address) {
         throw new Error("Wallet no disponible. Inicia sesión para continuar.");
       }
 
-      // Llamar al API de retiro en lugar de enviar directamente
+      if (!recipientAddress) {
+        throw new Error("Dirección de retiro no configurada. Verifica las variables de entorno.");
+      }
+
+      const amount = parseUnits(total.toString(), 6); // USDC has 6 decimals
+      const data = encodeFunctionData({
+        abi: USDC_ABI,
+        functionName: "transfer",
+        args: [recipientAddress, amount],
+      });
+
+      const txHash = await client.sendTransaction({
+        to: SEPOLIA_BASE_USDC,
+        data: data,
+        chain: baseSepolia,
+      });
+
       const response = await fetch("/api/webhook/bank/withdraw", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amountUsdc: u.toFixed(6),
           senderAddress: client.account.address,
-          recipientBankAccount: qrData.recipientAddress,
+          recipientBankAccount: qrData.bankAccount,
           recipientName: qrData.recipientName,
+          txHash: txHash,
         }),
       });
 
@@ -170,7 +188,7 @@ export default function QRTransferPage() {
       router.replace(
         `/withdraw/success?amountUsd=${encodeURIComponent(u.toFixed(2))}&amountBs=${encodeURIComponent(
           bsAmount || "0.00"
-        )}&withdrawalId=${result.data.withdrawalId}`
+        )}&withdrawalId=${result.data.withdrawalId}&transactionId=${result.data.transactionId}&txHash=${txHash}`
       );
     } catch (err: any) {
       console.error("Error al procesar retiro:", err);
@@ -203,10 +221,10 @@ export default function QRTransferPage() {
             <div className="flex-1">
               <div className="text-[18px] font-bold">{qrData.recipientName}</div>
               <div className="text-[12px] text-[#6B7280] font-mono">
-                {qrData.recipientAddress.slice(0, 8)}...{qrData.recipientAddress.slice(-4)}
+                {qrData.bankAccount.slice(0, 8)}...{qrData.bankAccount.slice(-4)}
               </div>
-              {qrData.recipientMemo && (
-                <div className="text-[12px] text-[#009DA1] font-medium">MEMO: {qrData.recipientMemo}</div>
+              {qrData.memo && (
+                <div className="text-[12px] text-[#009DA1] font-medium">MEMO: {qrData.memo}</div>
               )}
             </div>
           </div>
