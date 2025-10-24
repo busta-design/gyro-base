@@ -1,10 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function RegisterPage() {
   const { ready, authenticated, login } = usePrivy();
@@ -13,7 +12,7 @@ export default function RegisterPage() {
   useEffect(() => {
     // Podríamos redirigir si ya está autenticado
     if (authenticated) router.replace("/dashboard");
-  }, [authenticated]);
+  }, [authenticated, router]);
 
   const handleCreateAccount = async () => {
     try {
@@ -31,32 +30,74 @@ export default function RegisterPage() {
         <div className="flex flex-col items-center mt-10 mb-6 animate-in fade-in slide-in-from-top-2 duration-700 ease-out">
           <Image src="/Gyro$.svg" alt="GYRO" width={160} height={43} priority />
           <div className="flex flex-col items-center mt-6 mb-6 animate-in fade-in duration-700 delay-200">
-            <h1 className="text-[28px] font-bold text-[#171717] mt-4 text-center">¡Bienvenido a GYRO!</h1>
+            <h1 className="text-[28px] font-bold text-[#171717] mt-4 text-center">
+              ¡Bienvenido a GYRO!
+            </h1>
             <p className="text-[16px] text-[#555] text-center mt-2 leading-[22px] px-4 font-normal max-w-xl">
-              Tu billetera digital para enviar y recibir dinero de forma segura y rápida
+              Tu billetera digital para enviar y recibir dinero de forma segura
+              y rápida
             </p>
           </div>
         </div>
 
         {/* Features */}
         <div className="w-full max-w-xl mt-6 mb-10 px-4 animate-in fade-in duration-700 delay-300">
-          <div className="flex items-center mb-2 py-2 px-4 rounded-md shadow-sm" style={{ backgroundColor: "rgba(0, 157, 161, 0.05)" }}>
-            <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0, 157, 161, 0.1)" }}>
+          <div
+            className="flex items-center mb-2 py-2 px-4 rounded-md shadow-sm"
+            style={{ backgroundColor: "rgba(0, 157, 161, 0.05)" }}
+          >
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "rgba(0, 157, 161, 0.1)",
+              }}
+            >
               <span className="text-[#009da1] text-base">✓</span>
             </div>
-            <span className="text-[15px] text-[#171717] font-medium ml-3">Seguro y confiable</span>
+            <span className="text-[15px] text-[#171717] font-medium ml-3">
+              Seguro y confiable
+            </span>
           </div>
-          <div className="flex items-center mb-2 py-2 px-4 rounded-md shadow-sm" style={{ backgroundColor: "rgba(0, 157, 161, 0.05)" }}>
-            <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0, 157, 161, 0.1)" }}>
+          <div
+            className="flex items-center mb-2 py-2 px-4 rounded-md shadow-sm"
+            style={{ backgroundColor: "rgba(0, 157, 161, 0.05)" }}
+          >
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "rgba(0, 157, 161, 0.1)",
+              }}
+            >
               <span className="text-[#009da1] text-base">⚡</span>
             </div>
-            <span className="text-[15px] text-[#171717] font-medium ml-3">Transacciones rápidas</span>
+            <span className="text-[15px] text-[#171717] font-medium ml-3">
+              Transacciones rápidas
+            </span>
           </div>
-          <div className="flex items-center mb-2 py-2 px-4 rounded-md shadow-sm" style={{ backgroundColor: "rgba(0, 157, 161, 0.05)" }}>
-            <div className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0, 157, 161, 0.1)" }}>
+          <div
+            className="flex items-center mb-2 py-2 px-4 rounded-md shadow-sm"
+            style={{ backgroundColor: "rgba(0, 157, 161, 0.05)" }}
+          >
+            <div
+              className="flex items-center justify-center"
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "rgba(0, 157, 161, 0.1)",
+              }}
+            >
               <span className="text-[#009da1] text-base">🌐</span>
             </div>
-            <span className="text-[15px] text-[#171717] font-medium ml-3">Red global Stellar</span>
+            <span className="text-[15px] text-[#171717] font-medium ml-3">
+              Red global Stellar
+            </span>
           </div>
         </div>
 

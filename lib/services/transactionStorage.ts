@@ -19,20 +19,24 @@ export interface StoredTransaction {
 }
 
 // In-memory storage
-let transactions: Map<string, StoredTransaction> = new Map();
+const transactions: Map<string, StoredTransaction> = new Map();
 
 /**
  * Save a transaction to memory
  */
 export function saveTransaction(transaction: StoredTransaction): void {
   transactions.set(transaction.transactionId, transaction);
-  console.log(`[TRANSACTION STORAGE] Saved transaction: ${transaction.transactionId}`);
+  console.log(
+    `[TRANSACTION STORAGE] Saved transaction: ${transaction.transactionId}`
+  );
 }
 
 /**
  * Get a transaction by ID
  */
-export function getTransaction(transactionId: string): StoredTransaction | null {
+export function getTransaction(
+  transactionId: string
+): StoredTransaction | null {
   return transactions.get(transactionId) || null;
 }
 
@@ -69,7 +73,9 @@ export function updateTransactionStatus(
   if (errorMessage) transaction.errorMessage = errorMessage;
 
   transactions.set(transactionId, transaction);
-  console.log(`[TRANSACTION STORAGE] Updated transaction ${transactionId} status to ${status}`);
+  console.log(
+    `[TRANSACTION STORAGE] Updated transaction ${transactionId} status to ${status}`
+  );
   return transaction;
 }
 
