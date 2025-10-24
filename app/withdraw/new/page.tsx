@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
-import { createPublicClient, encodeFunctionData, formatUnits, http, parseUnits } from "viem";
+import { createPublicClient, encodeFunctionData, formatUnits, http, parseUnits, isAddress } from "viem";
 import { baseSepolia } from "viem/chains";
 import { USDC_ABI } from "@/lib/constants/abi/usdcAbi";
 import { SEPOLIA_BASE_USDC } from "@/lib/constants/contractAddresses";
@@ -61,35 +61,80 @@ function WithdrawUsdc() {
 
   const handleContinue = () => {
     const amt = parseFloat(amount);
-    if (!recipient || !amount || isNaN(amt) || amt <= 0) return;
+
+    // Validar monto
+    if (!amount || isNaN(amt) || amt <= 0) {
+      window.alert("Por favor ingresa un monto válido");
+      return;
+    }
+
+    // Validar dirección
+    if (!recipient || !isAddress(recipient)) {
+      window.alert("Por favor ingresa una dirección Ethereum válida");
+      return;
+    }
+
     setShowConfirm(true);
   };
 
   const handleSend = async () => {
-    if (!client) {
+    if (!client || !client.account?.address) {
       window.alert("Inicia sesión para continuar");
       return;
     }
+
     const amt = parseFloat(amount);
-    if (!recipient || !amount || isNaN(amt) || amt <= 0) return;
+
+    // Validar monto
+    if (!amount || isNaN(amt) || amt <= 0) {
+      window.alert("Por favor ingresa un monto válido");
+      return;
+    }
+
+    // Validar dirección
+    if (!recipient || !isAddress(recipient)) {
+      window.alert("Por favor ingresa una dirección Ethereum válida");
+      return;
+    }
+
+    // Validar que el monto no exceda el balance
+    if (balance && amt > parseFloat(balance)) {
+      window.alert("Saldo insuficiente");
+      return;
+    }
 
     setLoading(true);
     try {
-      const data = encodeFunctionData({
+      // Encode the USDC transfer function call
+      // transfer(address to, uint256 amount)
+      const transferAmount = parseUnits(amt.toFixed(6), 6);
+      const transferData = encodeFunctionData({
         abi: USDC_ABI,
         functionName: "transfer",
-        args: [recipient as `0x${string}`, parseUnits(amt.toFixed(6), 6)],
+        args: [recipient as `0x${string}`, transferAmount],
       });
 
+      console.log(
+        `[WITHDRAW USDC] Sending ${amt} USDC to ${recipient} via smart wallet`
+      );
+
+      // Send the transaction using smart wallet
       const txHash = await client.sendTransaction({
         to: SEPOLIA_BASE_USDC,
-        data,
-        value: 0n,
+        data: transferData,
         chain: baseSepolia,
       });
 
+      console.log(`[WITHDRAW USDC] Transaction sent: ${txHash}`);
+
       setShowConfirm(false);
-      router.replace(`/withdraw/success?amountUsd=${encodeURIComponent(amt.toFixed(2))}&amountBs=${encodeURIComponent("0.00")}&withdrawalId=${encodeURIComponent(txHash)}`);
+      router.replace(
+        `/withdraw/success?amountUsd=${encodeURIComponent(
+          amt.toFixed(2)
+        )}&amountBs=${encodeURIComponent("0.00")}&txHash=${encodeURIComponent(
+          txHash
+        )}&recipientAddress=${encodeURIComponent(recipient)}`
+      );
     } catch (e: any) {
       console.error("Error sending USDC:", e);
       window.alert(e?.message || "Error al enviar USDC");
@@ -112,11 +157,28 @@ function WithdrawUsdc() {
             <input
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              className="w-full bg-[#F3F4F6] border border-[#D1D5DB] rounded-xl py-3 px-3 text-[16px]"
+              className={`w-full bg-[#F3F4F6] border rounded-xl py-3 px-3 text-[16px] ${
+                recipient && !isAddress(recipient)
+                  ? "border-[#EF4444]"
+                  : "border-[#D1D5DB]"
+              }`}
               placeholder="0x..."
               autoComplete="off"
             />
-            <div className="text-[12px] text-[#6B7280] mt-1">Red: Base Sepolia • Token: USDC</div>
+            <div className="flex items-center justify-between mt-1">
+              <div className="text-[12px] text-[#6B7280]">Red: Base Sepolia • Token: USDC</div>
+              {recipient && (
+                <div
+                  className={`text-[12px] ${
+                    isAddress(recipient)
+                      ? "text-[#10B981]"
+                      : "text-[#EF4444]"
+                  }`}
+                >
+                  {isAddress(recipient) ? "✓ Dirección válida" : "✗ Dirección inválida"}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mb-2">
@@ -150,7 +212,13 @@ function WithdrawUsdc() {
           <div className="mt-5">
             <button
               onClick={handleContinue}
-              disabled={!recipient || !amount}
+              disabled={
+                !recipient ||
+                !amount ||
+                !isAddress(recipient) ||
+                parseFloat(amount) <= 0 ||
+                isNaN(parseFloat(amount))
+              }
               className="w-full h-12 rounded-xl bg-[#009DA1] text-white disabled:opacity-50"
             >
               Continuar
