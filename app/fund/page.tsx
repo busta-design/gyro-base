@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function FundPage() {
+function FundContent() {
   const router = useRouter();
   const search = useSearchParams();
 
@@ -158,5 +158,13 @@ export default function FundPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function FundPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <FundContent />
+    </Suspense>
   );
 }

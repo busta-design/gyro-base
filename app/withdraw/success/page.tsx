@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function WithdrawSuccessPage() {
+function WithdrawSuccessContent() {
   const router = useRouter();
   const search = useSearchParams();
 
@@ -104,5 +104,13 @@ export default function WithdrawSuccessPage() {
         :global(.ws-mounted) .ws-pop{transform:scale(1)}
       `}</style>
     </main>
+  );
+}
+
+export default function WithdrawSuccessPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <WithdrawSuccessContent />
+    </Suspense>
   );
 }

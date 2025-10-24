@@ -7,11 +7,11 @@ import { toPng } from "html-to-image";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPublicClient, http } from "viem";
 import { baseSepolia } from "viem/chains";
 
-export default function DepositQrPage() {
+function DepositQrContent() {
   const router = useRouter();
   const search = useSearchParams();
   const { client } = useSmartWallets();
@@ -248,5 +248,13 @@ export default function DepositQrPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function DepositQrPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <DepositQrContent />
+    </Suspense>
   );
 }

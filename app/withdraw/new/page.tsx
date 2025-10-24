@@ -4,7 +4,7 @@ import { USDC_ABI } from "@/lib/constants/abi/usdcAbi";
 import { SEPOLIA_BASE_USDC } from "@/lib/constants/contractAddresses";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   createPublicClient,
   encodeFunctionData,
@@ -299,7 +299,7 @@ function WithdrawUsdc() {
   );
 }
 
-export default function WithdrawNewPage() {
+function WithdrawNewContent() {
   const router = useRouter();
   const search = useSearchParams();
   const type = search?.get("type") || "bs";
@@ -516,5 +516,13 @@ export default function WithdrawNewPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function WithdrawNewPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <WithdrawNewContent />
+    </Suspense>
   );
 }
