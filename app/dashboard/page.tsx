@@ -219,12 +219,13 @@ export default function DashboardPage() {
 
         {/* Earnings Card */}
         <section className="bg-white mx-4 p-4 rounded-2xl flex items-center mb-6 shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+          <div onClick={() => router.push('/earn')} className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
             <IconTrendUp color="#10B981" />
           </div>
           <div className="flex-1 ml-4">
             <div className="text-[18px] font-bold">Gana con GYRO</div>
             <div className="text-[14px] text-[#6B7280]">Gana hasta 12% anual</div>
+            
           </div>
           <div className="w-16 h-8 flex items-center justify-center"></div>
         </section>
