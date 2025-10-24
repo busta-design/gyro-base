@@ -8,7 +8,7 @@
 
 import {
   convertBobToUsdc,
-  getExchangeRate,
+  getDepositExchangeRate,
 } from "@/lib/services/currencyConverter";
 import { sendUsdcToRecipient } from "@/lib/services/ethereumService";
 import { NextRequest, NextResponse } from "next/server";
@@ -99,7 +99,7 @@ export async function POST(
 
     // Convert BOB to USDC
     const amountUsdc = convertBobToUsdc(amountBob);
-    const exchangeRate = getExchangeRate();
+    const exchangeRate = getDepositExchangeRate();
     console.log(
       `[DEPOSIT WEBHOOK] Converted to ${amountUsdc} USDC (${exchangeRate.rate})`
     );

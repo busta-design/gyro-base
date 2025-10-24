@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
-import { createPublicClient, formatEther, http } from "viem";
+import { createPublicClient, formatUnits, http } from "viem";
 import { baseSepolia } from "viem/chains";
+import { USDC_ABI } from "@/lib/constants/abi/usdcAbi";
+import { SEPOLIA_BASE_USDC } from "@/lib/constants/contractAddresses";
 
 function IconUser({ className = "", color = "currentColor" }) {
   return (
@@ -95,12 +97,14 @@ function IconQRCode({ className = "", color = "currentColor" }) {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { authenticated, ready, logout } = usePrivy();
+  const { ready, authenticated, user, logout } = usePrivy();
   const { client } = useSmartWallets();
 
   const [balance, setBalance] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [depositRate, setDepositRate] = useState<string>("--");
+  const [withdrawalRate, setWithdrawalRate] = useState<string>("--");
 
   const address = client?.account?.address;
 
@@ -113,26 +117,28 @@ export default function DashboardPage() {
     []
   );
 
-  const loadBalance = async () => {
-    if (!address) return;
-    setLoading(true);
-    try {
-      const wei = await publicClient.getBalance({ address });
-      setBalance(formatEther(wei));
-    } catch (e) {
-      console.error("Error loading balance:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (!ready) return;
     if (!authenticated) {
-      router.replace("/register");
+      router.replace("/");
       return;
     }
-  }, [ready, authenticated, router]);
+    if (client?.account?.address) {
+      loadBalance();
+    }
+    // Load exchange rates
+    fetch("/api/rates")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.depositRate) setDepositRate(data.depositRate);
+        if (data.withdrawalRate) setWithdrawalRate(data.withdrawalRate);
+      })
+      .catch(() => {
+        // Fallback to default if API fails
+        setDepositRate("12.60");
+        setWithdrawalRate("12.40");
+      });
+  }, [ready, authenticated, client?.account?.address, router]);
 
   useEffect(() => {
     if (authenticated && address) {
@@ -142,8 +148,26 @@ export default function DashboardPage() {
 
   const masked = useMemo(() => {
     if (!balance) return "--";
-    return visible ? `${balance} ETH` : "•••••";
+    return visible ? `${balance} USDC` : "•••••";
   }, [balance, visible]);
+
+  const loadBalance = async () => {
+    if (!address) return;
+    setLoading(true);
+    try {
+      const bal = (await publicClient.readContract({
+        address: SEPOLIA_BASE_USDC,
+        abi: USDC_ABI,
+        functionName: "balanceOf",
+        args: [address],
+      })) as bigint;
+      setBalance(formatUnits(bal, 6));
+    } catch (e) {
+      console.error("Error loading USDC balance:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-dvh bg-[#F3F4F6] text-[#111827] flex flex-col">
@@ -179,13 +203,13 @@ export default function DashboardPage() {
 
           <div className="flex justify-center gap-8">
             <div className="flex flex-col items-center">
-              <button className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+              <button onClick={() => router.push('/funding')} className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
                 <IconArrowDown color="#ffffff" />
               </button>
               <span className="text-white text-sm font-medium mt-2 text-center">Depositar dinero</span>
             </div>
             <div className="flex flex-col items-center">
-              <button className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+              <button onClick={() => router.push('/withdraw')} className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
                 <IconArrowUp color="#ffffff" />
               </button>
               <span className="text-white text-sm font-medium mt-2 text-center">Retirar dinero</span>
@@ -205,7 +229,7 @@ export default function DashboardPage() {
           <div className="w-16 h-8 flex items-center justify-center"></div>
         </section>
 
-        {/* Dollar Price Card (static placeholder) */}
+        {/* Dollar Price Card */}
         <section className="bg-white mx-4 p-6 rounded-2xl mb-6 shadow-sm">
           <div className="text-[18px] font-semibold mb-4">Dólar Precio</div>
           <div className="flex gap-4">
@@ -214,14 +238,14 @@ export default function DashboardPage() {
                 <IconChevronDown color="#10B981" />
                 <span className="text-[14px] text-[#6B7280]">Depósito</span>
               </div>
-              <div className="text-[18px] font-bold">12,92 Bs</div>
+              <div className="text-[18px] font-bold">{depositRate} Bs</div>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <IconChevronUp color="#EF4444" />
                 <span className="text-[14px] text-[#6B7280]">Retiro</span>
               </div>
-              <div className="text-[18px] font-bold">12,41 Bs</div>
+              <div className="text-[18px] font-bold">{withdrawalRate} Bs</div>
             </div>
           </div>
         </section>
@@ -246,7 +270,7 @@ export default function DashboardPage() {
           <IconHome color="#009DA1" />
           <span className="text-xs font-medium text-[#009DA1]">Inicio</span>
         </button>
-        <button className="w-16 h-16 rounded-full bg-[#009DA1] text-white flex items-center justify-center -translate-y-6 shadow-lg">
+        <button onClick={() => router.push("/funding")} className="w-16 h-16 rounded-full bg-[#009DA1] text-white flex items-center justify-center -translate-y-6 shadow-lg">
           <IconQRCode color="#ffffff" />
         </button>
         <button className="flex-1 flex flex-col items-center">
