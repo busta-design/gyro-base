@@ -388,7 +388,12 @@ export default function DashboardPage() {
         </section>
 
         {/* Earnings Card */}
-        <section className="bg-white mx-4 p-4 rounded-2xl flex items-center mb-6 shadow-sm">
+        <section
+          onClick={() => router.push("/earn")}
+          className="bg-white mx-4 p-4 rounded-2xl flex items-center mb-6 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+          role="button"
+          aria-label="Gana con GYRO"
+        >
           <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
             <IconTrendUp color="#10B981" />
           </div>
