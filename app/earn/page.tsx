@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSmartWallets } from "@privy-io/react-auth/smart-wallets";
 import { createPublicClient, formatUnits, http, parseUnits, encodeFunctionData } from "viem";
@@ -32,30 +32,34 @@ export default function EarnPage() {
     []
   );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!address) return;
-      try {
-        const [stakedBal, rew, apyRaw, feeRaw, usdc] = await Promise.all([
-          publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "stakedBalance", args: [address] }) as Promise<bigint>,
-          publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "calculateRewards", args: [address] }) as Promise<bigint>,
-          publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "APY" }) as Promise<bigint>,
-          publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "withdrawFee" }) as Promise<bigint>,
-          publicClient.readContract({ address: SEPOLIA_BASE_USDC, abi: USDC_ABI, functionName: "balanceOf", args: [address] }) as Promise<bigint>,
-        ]);
-        setStaked(formatUnits(stakedBal, 6));
-        setRewards(formatUnits(rew, 6));
-        // APY is 5 * 10^16 => 0.05 -> 5.00
-        const apyPct = Number(apyRaw) / 1e16; // 500 => 5.00
-        setApy((apyPct / 100).toFixed(2));
-        setFeeBps(Number(feeRaw));
-        setUsdcBal(formatUnits(usdc, 6));
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchData();
+  const fetchAll = useCallback(async () => {
+    if (!address) return;
+    try {
+      const [stakedBal, rew, apyRaw, feeRaw, usdc] = await Promise.all([
+        publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "stakedBalance", args: [address] }) as Promise<bigint>,
+        publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "calculateRewards", args: [address] }) as Promise<bigint>,
+        publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "APY" }) as Promise<bigint>,
+        publicClient.readContract({ address: SEPOLIA_BASE_STAKING, abi: STAKING_ABI, functionName: "withdrawFee" }) as Promise<bigint>,
+        publicClient.readContract({ address: SEPOLIA_BASE_USDC, abi: USDC_ABI, functionName: "balanceOf", args: [address] }) as Promise<bigint>,
+      ]);
+      setStaked(formatUnits(stakedBal, 6));
+      setRewards(formatUnits(rew, 6));
+      const apyPct = Number(apyRaw) / 1e16; // 500 => 5.00
+      setApy((apyPct / 100).toFixed(2));
+      setFeeBps(Number(feeRaw));
+      setUsdcBal(formatUnits(usdc, 6));
+    } catch (e) {
+      console.error(e);
+    }
   }, [address, publicClient]);
+
+  useEffect(() => {
+    // initial fetch
+    fetchAll();
+    // polling every 3s
+    const id = setInterval(fetchAll, 3000);
+    return () => clearInterval(id);
+  }, [fetchAll]);
 
   const ensureAllowance = async (needed: bigint) => {
     if (!client || !address) throw new Error("Wallet not ready");
@@ -81,6 +85,7 @@ export default function EarnPage() {
   const handleStake = async () => {
     setError(null);
     try {
+      setLoading(true);
       if (!client) throw new Error("Wallet not ready");
       const amt = parseFloat(amount);
       if (!amt || amt <= 0) throw new Error("Ingresa un monto válido");
@@ -93,14 +98,17 @@ export default function EarnPage() {
       };
       await client.sendTransaction(data);
       setAmount("");
+      await fetchAll();
     } catch (e: any) {
       setError(e?.message || "Error al hacer stake");
     }
+    finally { setLoading(false); }
   };
 
   const handleClaim = async () => {
     setError(null);
     try {
+      setLoading(true);
       if (!client) throw new Error("Wallet not ready");
       const data = {
         to: SEPOLIA_BASE_STAKING,
@@ -108,14 +116,17 @@ export default function EarnPage() {
         chain: baseSepolia,
       };
       await client.sendTransaction(data);
+      await fetchAll();
     } catch (e: any) {
       setError(e?.message || "Error al reclamar recompensas");
     }
+    finally { setLoading(false); }
   };
 
   const handleWithdraw = async () => {
     setError(null);
     try {
+      setLoading(true);
       if (!client) throw new Error("Wallet not ready");
       const amt = parseFloat(amount);
       if (!amt || amt <= 0) throw new Error("Ingresa un monto válido");
@@ -127,9 +138,11 @@ export default function EarnPage() {
       };
       await client.sendTransaction(data);
       setAmount("");
+      await fetchAll();
     } catch (e: any) {
       setError(e?.message || "Error al retirar");
     }
+    finally { setLoading(false); }
   };
 
   return (
@@ -186,9 +199,9 @@ export default function EarnPage() {
           </div>
           {error && <div className="text-[12px] text-[#EF4444] mb-3">{error}</div>}
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={handleStake} disabled={!client} className="h-12 rounded-xl bg-[#009DA1] text-white">Stake</button>
-            <button onClick={handleClaim} disabled={!client} className="h-12 rounded-xl bg-[#10B981] text-white">Claim</button>
-            <button onClick={handleWithdraw} disabled={!client} className="h-12 rounded-xl bg-[#EF4444] text-white">Withdraw</button>
+            <button onClick={handleStake} disabled={!client || loading} className="h-12 rounded-xl bg-[#009DA1] text-white disabled:opacity-60">Stake</button>
+            <button onClick={handleClaim} disabled={!client || loading} className="h-12 rounded-xl bg-[#10B981] text-white disabled:opacity-60">Claim</button>
+            <button onClick={handleWithdraw} disabled={!client || loading} className="h-12 rounded-xl bg-[#EF4444] text-white disabled:opacity-60">Withdraw</button>
           </div>
         </section>
       </div>
