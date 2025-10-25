@@ -116,7 +116,6 @@ export default function ReceiveUsdcPage() {
               />
               <div className="w-full text-left text-sm">
                 <div>Red: <span className="font-semibold">Base Sepolia</span></div>
-                <div>Contrato USDC: <span className="font-mono">{SEPOLIA_BASE_USDC}</span></div>
                 <div>Dirección: <span className="font-mono">{address ? address.slice(0, 8) + "..." + address.slice(-6) : "--"}</span></div>
               </div>
               <div className="w-full mt-3 pt-3 border-t border-[#E5E7EB] text-center text-xs text-[#6B7280]">

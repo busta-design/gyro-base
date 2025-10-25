@@ -41,6 +41,7 @@ export default function QRTransferPage() {
   const [feeWaived, setFeeWaived] = useState(false);
   const [watchingAd, setWatchingAd] = useState(false);
   const [adCountdown, setAdCountdown] = useState<number | null>(null);
+  const [adOpen, setAdOpen] = useState(false);
 
   // Balance USDC on-chain
   const [balanceUsdc, setBalanceUsdc] = useState<number | null>(null);
@@ -118,7 +119,8 @@ export default function QRTransferPage() {
   }, [usdAmount, effectiveFeeUsd]);
 
   const startWatchAd = () => {
-    if (watchingAd) return;
+    if (watchingAd || feeWaived) return;
+    setAdOpen(true);
     setWatchingAd(true);
     let t = 5; // segundos de demo
     setAdCountdown(t);
@@ -130,6 +132,7 @@ export default function QRTransferPage() {
         setWatchingAd(false);
         setFeeWaived(true);
         setAdCountdown(null);
+        setAdOpen(false);
       }
     }, 1000);
   };
@@ -378,19 +381,28 @@ export default function QRTransferPage() {
 
         {/* Info */}
         <div className="px-1 text-[14px] text-[#111827] space-y-2">
-          <div className="flex items-center gap-2">
-            <span>✅</span>
-            <span>Transferencia segura vía QR</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>⚡</span>
-            <span>Procesamiento instantáneo</span>
-          </div>
+          
           {errorMsg && (
             <div className="text-[12px] text-[#EF4444]">{errorMsg}</div>
           )}
         </div>
       </section>
+
+      {adOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
+            <div className="text-[18px] font-bold mb-2">Anuncio</div>
+            <div className="text-[14px] text-[#6B7280] mb-3">Patrocinado · Mira {adCountdown ?? 5}s para quitar el fee</div>
+            <div className="h-36 bg-[#F3F4F6] rounded-xl mb-4 flex items-center justify-center">Ad</div>
+            <div className="flex gap-2">
+              <button onClick={() => { setAdOpen(false); setWatchingAd(false); setAdCountdown(null); }} className="flex-1 h-11 rounded-xl border border-[#E5E7EB]">Cerrar</button>
+              <button disabled className="flex-1 h-11 rounded-xl bg-[#009DA1] text-white">
+                {adCountdown ? `Terminando en ${adCountdown}s` : "Completado"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] p-4">

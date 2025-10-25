@@ -42,7 +42,11 @@ function WithdrawUsdc() {
   const [balance, setBalance] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const networkFee = 0.0; // Smart wallet pays gas; fee display optional
+  const [adOpen, setAdOpen] = useState(false);
+  const [adWatched, setAdWatched] = useState(false);
+  const baseFee = 0.12;
+  const networkFee = adWatched ? 0 : baseFee;
+  const [exchangeRate, setExchangeRate] = useState<number>(12.4); // 1 USD = 12.40 Bs (withdrawal rate)
 
   useEffect(() => {
     const load = async () => {
@@ -61,6 +65,18 @@ function WithdrawUsdc() {
     };
     load();
   }, [address, publicClient]);
+
+  // Load withdrawal exchange rate (for success screen Bs amount)
+  useEffect(() => {
+    fetch("/api/rates")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.withdrawalRate) {
+          setExchangeRate(parseFloat(data.withdrawalRate));
+        }
+      })
+      .catch(() => setExchangeRate(12.4));
+  }, []);
 
   const handleMax = () => {
     if (balance) setAmount(balance);
@@ -135,10 +151,11 @@ function WithdrawUsdc() {
       console.log(`[WITHDRAW USDC] Transaction sent: ${txHash}`);
 
       setShowConfirm(false);
+      const amountBs = (amt * exchangeRate).toFixed(2);
       router.replace(
         `/withdraw/success?amountUsd=${encodeURIComponent(
           amt.toFixed(2)
-        )}&amountBs=${encodeURIComponent("0.00")}&txHash=${encodeURIComponent(
+        )}&amountBs=${encodeURIComponent(amountBs)}&txHash=${encodeURIComponent(
           txHash
         )}&recipientAddress=${encodeURIComponent(recipient)}`
       );
@@ -236,6 +253,14 @@ function WithdrawUsdc() {
             <div className="text-[#6B7280]">Comisión de red</div>
             <div>{networkFee.toFixed(2)} USDC</div>
           </div>
+          {!adWatched ? (
+            <div className="mt-2 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] p-3 flex items-center justify-between">
+              <div className="text-[12px] text-[#6B7280]">Mira un anuncio para cubrir la comisión</div>
+              <button onClick={() => setAdOpen(true)} className="h-8 px-3 rounded-lg bg-[#009DA1] text-white text-[12px]">Ver anuncio</button>
+            </div>
+          ) : (
+            <div className="mt-2 rounded-xl bg-[#ECFDF5] border border-[#D1FAE5] p-3 text-[12px] text-[#065F46]">Comisión cubierta por anuncio</div>
+          )}
           <div className="flex items-center justify-between text-[16px] font-semibold mt-2">
             <div>Total</div>
             <div>
@@ -295,6 +320,29 @@ function WithdrawUsdc() {
           </div>
         )}
       </section>
+      {adOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm">
+            <div className="text-[18px] font-bold mb-2">Anuncio</div>
+            <div className="text-[14px] text-[#6B7280] mb-4">Patrocinado · Mira 5 segundos para cubrir tu comisión</div>
+            <div className="h-36 bg-[#F3F4F6] rounded-xl mb-4 flex items-center justify-center">Ad</div>
+            <div className="flex gap-2">
+              <button onClick={() => setAdOpen(false)} className="flex-1 h-11 rounded-xl border border-[#E5E7EB]">Cerrar</button>
+              <button
+                onClick={() => {
+                  setTimeout(() => {
+                    setAdWatched(true);
+                    setAdOpen(false);
+                  }, 5000);
+                }}
+                className="flex-1 h-11 rounded-xl bg-[#009DA1] text-white"
+              >
+                Ver ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

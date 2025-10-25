@@ -87,7 +87,6 @@ function WithdrawSuccessContent() {
 
       {/* Actions */}
       <div className="w-full max-w-[560px] grid grid-cols-2 gap-3 ws-fade ws-delay-4 mb-10">
-        <button onClick={() => router.push('/history')} className="h-12 rounded-xl border border-[#009DA1] bg-white text-[#009DA1] font-semibold">Ver Historial</button>
         <button onClick={() => router.replace('/dashboard')} className="h-12 rounded-xl bg-[#009DA1] text-white font-semibold shadow-[0_6px_18px_rgba(0,157,161,0.35)]">Ir al Inicio</button>
       </div>
 

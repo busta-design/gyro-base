@@ -17,20 +17,20 @@ export default function FundingOptionsPage() {
       </header>
 
       <section className="px-4 pb-8">
-        <h1 className="text-[24px] md:text-[28px] font-bold mb-6 leading-tight">
+        <h1 className="text-[24px] md:text-[28px] font-bold mb-4 leading-tight">
           Elige cómo cargar plata a tu cuenta
         </h1>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           <button
             onClick={goBolivianos}
-            className="bg-white rounded-2xl p-5 flex items-center justify-between shadow-sm"
+            className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#F3F4F6] flex items-center justify-center text-2xl">
+            <div className="flex items-center gap-2 w-full pr-3">
+              <div className="w-10 h-10 shrink-0 rounded-full bg-[#F3F4F6] flex items-center justify-center text-2xl">
                 <span role="img" aria-label="Bolivia flag">🇧🇴</span>
               </div>
-              <div>
+              <div className="text-left leading-tight">
                 <div className="text-[16px] font-semibold">Bolivianos</div>
                 <div className="text-[14px] text-[#6B7280]">Desde cualquier cuenta en Bolivia</div>
               </div>
@@ -40,13 +40,13 @@ export default function FundingOptionsPage() {
 
           <button
             onClick={goUSDC}
-            className="bg-white rounded-2xl p-5 flex items-center justify-between shadow-sm"
+            className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#F3F4F6] flex items-center justify-center">
+           <div className="flex items-center gap-2 w-full pr-3">
+              <div className="w-10 h-10 shrink-0 rounded-full bg-[#F3F4F6] flex items-center justify-center">
                 <Image src="/usdc.svg" alt="USDC" width={24} height={24} />
               </div>
-              <div>
+              <div className="text-left leading-tight">
                 <div className="text-[16px] font-semibold">USDC</div>
                 <div className="text-[14px] text-[#6B7280]">Desde una billetera crypto</div>
               </div>
