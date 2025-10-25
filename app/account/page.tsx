@@ -12,9 +12,6 @@ export default function AccountPage() {
 
   const address = client?.account?.address || "--";
   const displayName = useMemo(() => {
-    if (user?.firstName || user?.lastName) {
-      return `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
-    }
     return user?.email?.address || user?.phone?.number || "Mi cuenta";
   }, [user]);
 
