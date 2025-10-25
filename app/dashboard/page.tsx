@@ -323,9 +323,8 @@ export default function DashboardPage() {
       <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <header className="flex items-center justify-between px-4 pt-4 mb-6">
-          <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm">
-            <IconUser color="#009DA1" />
-            <span className="text-[16px] font-medium">Mi cuenta</span>
+          <button onClick={() => router.push('/ads')} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center">
+            <span className="text-xl">🪙</span>
           </button>
           <button
             onClick={logout}
@@ -449,7 +448,7 @@ export default function DashboardPage() {
         >
           <IconQRCode color="#ffffff" />
         </button>
-        <button className="flex-1 flex flex-col items-center">
+        <button onClick={() => router.push('/account')} className="flex-1 flex flex-col items-center">
           <IconUser color="#9CA3AF" />
           <span className="text-xs font-medium text-[#9CA3AF]">Mi cuenta</span>
         </button>

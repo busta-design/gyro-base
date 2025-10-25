@@ -31,13 +31,18 @@ function WithdrawSuccessContent() {
   }, []);
 
   return (
-    <main className="min-h-dvh bg-[#F3F4F6] text-[#111827] flex flex-col items-center px-4 pt-16">
+    <main className="min-h-dvh bg-gradient-to-b from-[#F0FFF8] via-[#F3F4F6] to-[#EEF6FF] text-[#111827] flex flex-col items-center px-4 pt-16 relative overflow-hidden">
+      {/* Confetti */}
+      <div className="confetti pointer-events-none" aria-hidden />
+
       {/* Success Icon */}
-      <div className="mb-8 ws-fade ws-slide">
-        <div className="w-[120px] h-[120px] rounded-full bg-[#22C55E] shadow-[0_10px_30px_rgba(34,197,94,0.35)] flex items-center justify-center ws-pop">
+      <div className="mb-8 ws-fade ws-slide relative">
+        <div className="success-glow absolute -inset-6 rounded-full" />
+        <div className="w-[120px] h-[120px] rounded-full bg-[#22C55E] shadow-[0_10px_30px_rgba(34,197,94,0.35)] flex items-center justify-center ws-pop relative">
           <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white text-[#10B981] text-[10px] font-semibold shadow-sm">Completado</div>
         </div>
       </div>
 
@@ -47,12 +52,16 @@ function WithdrawSuccessContent() {
         <div className="text-[16px] text-[#6B7280]">Tu retiro ha sido procesado correctamente</div>
       </div>
 
-      {/* Details card */}
+      {/* Details card */
+      }
       <div className="w-full max-w-[560px] mb-6 ws-fade ws-delay-2">
-        <div className="bg-white rounded-2xl p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)]">
+        <div className="bg-white rounded-2xl p-5 shadow-[0_6px_18px_rgba(15,23,42,0.06)] border border-[#E5E7EB]">
           <div className="flex items-center justify-between py-2">
             <div className="text-[14px] text-[#6B7280]">Monto retirado:</div>
-            <div className="text-[16px] font-semibold text-right">{amountBs} Bs <span className="text-[14px] text-[#6B7280] font-normal">({amountUsd} USDC)</span></div>
+            <div className="text-right">
+              <div className="text-[18px] font-extrabold tracking-tight amount-highlight">{amountBs} Bs</div>
+              <div className="text-[12px] text-[#6B7280]">({amountUsd} USDC)</div>
+            </div>
           </div>
           <div className="h-px bg-[#E5E7EB] my-2" />
           <div className="flex items-center justify-between py-2">
@@ -68,7 +77,7 @@ function WithdrawSuccessContent() {
           <div className="flex items-center justify-between py-2">
             <div className="text-[14px] text-[#6B7280]">Estado:</div>
             <div className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#F59E0B]" />
+              <span className="inline-block w-2 h-2 rounded-full bg-[#F59E0B] animate-pulse" />
               <span className="text-[14px] font-semibold text-[#F59E0B]">Procesando</span>
             </div>
           </div>
@@ -101,6 +110,19 @@ function WithdrawSuccessContent() {
         :global(.ws-mounted) .ws-fade{opacity:1}
         :global(.ws-mounted) .ws-slide{transform:translateY(0)}
         :global(.ws-mounted) .ws-pop{transform:scale(1)}
+
+        /* Success glow */
+        .success-glow{background:radial-gradient(closest-side,rgba(34,197,94,.25),rgba(34,197,94,0) 70%);animation:spinGlow 4s linear infinite}
+        @keyframes spinGlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+        /* Amount highlight */
+        .amount-highlight{background:linear-gradient(90deg,#10B981,#06B6D4);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+        /* Confetti */
+        .confetti{position:absolute;inset:0;overflow:hidden}
+        .confetti:before,.confetti:after{content:"";position:absolute;inset:auto;top:-10px;width:2px;height:8px;background:#F59E0B;box-shadow:20px 10px 0 #10B981,40px -6px 0 #06B6D4,60px 8px 0 #EF4444,80px -4px 0 #A78BFA,100px 12px 0 #F43F5E,120px -8px 0 #34D399;animation:fall 2.2s linear infinite}
+        .confetti:after{left:50%;background:#06B6D4;box-shadow:18px -8px 0 #F59E0B,36px 12px 0 #10B981,54px -10px 0 #F43F5E,72px 6px 0 #34D399,90px -12px 0 #A78BFA,108px 10px 0 #EF4444;animation-duration:2.8s}
+        @keyframes fall{from{transform:translateY(-10px) rotate(0)}to{transform:translateY(140vh) rotate(360deg)}}
       `}</style>
     </main>
   );
