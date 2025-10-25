@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./public/Gyro$.svg" alt="GYRO Wallet Logo" width="200"/>
+  <img src="/public/Gyro .png" alt="GYRO Wallet Logo" width="200"/>
   <h1 align="center">GYRO Wallet</h1>
   <p align="center">
     A modern and secure digital wallet
